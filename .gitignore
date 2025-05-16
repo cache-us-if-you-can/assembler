@@ -1,3 +1,6 @@
+.direnv
+target
+result
+
 input.txt
 output.txt
-result
