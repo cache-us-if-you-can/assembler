@@ -1,7 +1,10 @@
 use crate::types::*;
 
 pub fn parse_line(line: &str) -> Line {
-    let line = line.trim().to_uppercase();
+    let line = {
+        let line = line.splitn(2, ';').next().unwrap();
+        line.trim().to_uppercase()
+    };
 
     let mut parts = line.splitn(2, ':');
     let (label, rest) = match (parts.next(), parts.next()) {
