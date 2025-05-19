@@ -1,0 +1,61 @@
+use crate::types::*;
+
+pub fn parse_line(line: &str) -> Line {
+    let line = line.trim().to_uppercase();
+    let mut label = None;
+    let mut instruction = None;
+
+    let mut parts = line.splitn(2, ':');
+    if let Some(first) = parts.next() {
+        if let Some(rest) = parts.next() {
+            label = Some(first.trim().to_string());
+            instruction = Some(parse_instruction(rest.trim()));
+        } else {
+            instruction = Some(parse_instruction(first.trim()));
+        }
+    }
+    Line { label, instruction }
+}
+
+fn parse_instruction(text: &str) -> Instruction {
+    let tokens: Vec<&str> = text.split_whitespace().collect();
+
+    match tokens.as_slice() {
+        ["NOP"] => Instruction::Nop,
+        ["INPUT"] => Instruction::Input,
+        ["OUTPUT"] => Instruction::Output,
+        ["HALT"] => Instruction::Halt,
+        ["INC", reg] => Instruction::Inc(parse_register(reg)),
+        ["MOV", args] => {
+            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
+            Instruction::Mov(parse_register(regs[0]), parse_register(regs[1]))
+        }
+        ["ADD", args] => {
+            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
+            Instruction::Add(parse_register(regs[0]), parse_register(regs[1]))
+        }
+        ["JMP", addr] => Instruction::Jmp(parse_value(addr)),
+        ["LOAD", args @ ..] => {
+            let joined = args.join(" ");
+            let parts: Vec<&str> = joined.split(',').map(str::trim).collect();
+            Instruction::Load(parse_register(parts[0]), parse_value(parts[1]))
+        }
+        _ => panic!("Unknown instruction: {}", text),
+    }
+}
+
+fn parse_register(s: &str) -> Register {
+    match s {
+        "A" => Register::A,
+        "B" => Register::B,
+        _ => panic!("Unknown register: {}", s),
+    }
+}
+
+fn parse_value(s: &str) -> Value {
+    if let Some(imm) = s.strip_prefix("#") {
+        Value::Immediate(imm.parse().unwrap())
+    } else {
+        Value::Label(s.to_string())
+    }
+}
