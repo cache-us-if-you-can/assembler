@@ -1,11 +1,23 @@
 mod assembler;
 mod types;
+use clap::Parser;
 
 use assembler::{encoder, parser, writer};
 use types::*;
 
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    /// Input assembly file
+    input: String,
+    /// Output hex file
+    output: Option<String>,
+}
+
 fn main() {
-    let source = std::fs::read_to_string("input.txt").expect("Could not read file");
+    let args = Args::parse();
+
+    let source = std::fs::read_to_string(args.input).expect("Could not read file");
 
     let parsed_lines: Vec<Line> = source
         .lines()
@@ -23,6 +35,6 @@ fn main() {
         }
     }
 
-    writer::write_hex_output(&program, "output.txt");
+    writer::write_hex_output(&program, &args.output);
     println!("Assembled successfully. Wrote {} bytes.", program.len());
 }

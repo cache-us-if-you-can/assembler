@@ -1,14 +1,21 @@
-use std::fs::File;
-use std::io::Write;
-
-pub fn write_hex_output(program: &[u8], filename: &str) {
+pub fn write_hex_output(program: &[u8], output: &Option<String>) {
     let hex_string = program
         .iter()
         .map(|byte| format!("{:02X}", byte))
         .collect::<Vec<String>>()
         .join(" ");
 
-    let mut file = File::create(filename).expect("Cannot create file");
-    file.write_all(hex_string.as_bytes())
-        .expect("Cannot write file");
+    match output {
+        Some(filename) => {
+            std::fs::write(filename, hex_string).expect("Cannot write to file");
+            println!(
+                "Assembled successfully. Wrote to {} ({} bytes)",
+                filename,
+                program.len()
+            );
+        }
+        None => {
+            println!("{}", hex_string);
+        }
+    }
 }
