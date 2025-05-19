@@ -2,18 +2,15 @@ use crate::types::*;
 
 pub fn parse_line(line: &str) -> Line {
     let line = line.trim().to_uppercase();
-    let mut label = None;
-    let mut instruction = None;
 
     let mut parts = line.splitn(2, ':');
-    if let Some(first) = parts.next() {
-        if let Some(rest) = parts.next() {
-            label = Some(first.trim().to_string());
-            instruction = Some(parse_instruction(rest.trim()));
-        } else {
-            instruction = Some(parse_instruction(first.trim()));
-        }
-    }
+    let (label, rest) = match (parts.next(), parts.next()) {
+        (Some(label), Some(instr)) => (Some(label.trim().to_string()), instr.trim()),
+        (Some(instr), None) => (None, instr.trim()),
+        _ => panic!("Invalid line: {}", line),
+    };
+
+    let instruction = Some(parse_instruction(rest));
     Line { label, instruction }
 }
 

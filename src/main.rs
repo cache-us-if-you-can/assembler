@@ -27,14 +27,11 @@ fn main() {
 
     let symbols = encoder::build_symbol_table(&parsed_lines);
 
-    let mut program = Vec::new();
-    for line in &parsed_lines {
-        if let Some(instr) = &line.instruction {
-            let bytes = encoder::assemble_instruction(instr, &symbols);
-            program.extend(bytes);
-        }
-    }
+    let program: Vec<u8> = parsed_lines
+        .iter()
+        .filter_map(|line| line.instruction.as_ref())
+        .flat_map(|instr| encoder::assemble_instruction(instr, &symbols))
+        .collect();
 
     writer::write_hex_output(&program, &args.output);
-    println!("Assembled successfully. Wrote {} bytes.", program.len());
 }

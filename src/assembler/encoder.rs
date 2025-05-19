@@ -2,21 +2,17 @@ use crate::types::*;
 use std::collections::HashMap;
 
 pub fn build_symbol_table(lines: &[Line]) -> HashMap<String, usize> {
-    let mut table = HashMap::new();
-    let mut offset = 0;
-
-    for line in lines {
-        if let Some(label) = &line.label {
-            table.insert(label.clone(), offset);
-        }
-
-        if let Some(instr) = &line.instruction {
-            let size = instruction_size(instr);
-            offset += size;
-        }
-    }
-
-    table
+    lines
+        .iter()
+        .scan(0usize, |addr, line| {
+            let current = *addr;
+            if let Some(instr) = &line.instruction {
+                *addr += instruction_size(instr);
+            }
+            Some((line, current))
+        })
+        .filter_map(|(line, addr)| line.label.as_ref().map(|l| (l.clone(), addr)))
+        .collect()
 }
 
 fn instruction_size(instr: &Instruction) -> usize {
