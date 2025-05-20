@@ -2,11 +2,11 @@ use crate::types::*;
 
 pub fn parse_line(line: &str) -> Line {
     let line = {
-        let line = line.splitn(2, ';').next().unwrap();
+        let line = line.split(';').next().unwrap();
         line.trim().to_uppercase()
     };
 
-    let mut parts = line.splitn(2, ':');
+    let mut parts = line.split(':');
     let (label, rest) = match (parts.next(), parts.next()) {
         (Some(label), Some(instr)) => (Some(label.trim().to_string()), instr.trim()),
         (Some(instr), None) => (None, instr.trim()),

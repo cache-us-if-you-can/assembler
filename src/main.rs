@@ -22,7 +22,7 @@ fn main() {
     let parsed_lines: Vec<Line> = source
         .lines()
         .filter(|line| !line.trim().is_empty())
-        .map(|line| parser::parse_line(line))
+        .map(parser::parse_line)
         .collect();
 
     let symbols = encoder::build_symbol_table(&parsed_lines);

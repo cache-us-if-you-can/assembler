@@ -17,17 +17,9 @@ pub fn build_symbol_table(lines: &[Line]) -> HashMap<String, usize> {
 
 fn instruction_size(instr: &Instruction) -> usize {
     match instr {
-        Instruction::Nop
-        | Instruction::Input
-        | Instruction::Output
-        | Instruction::Halt
-        | Instruction::Inc(_)
-        | Instruction::Mov(_, _)
-        | Instruction::Add(_, _) => 1,
-
         Instruction::Load(_, _) => 2,
         Instruction::Jmp(_) => 2,
-        // Extend as needed...
+        _ => 1,
     }
 }
 
