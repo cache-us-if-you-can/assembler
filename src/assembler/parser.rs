@@ -40,6 +40,23 @@ fn parse_instruction(text: &str) -> Instruction {
             let parts: Vec<&str> = joined.split(',').map(str::trim).collect();
             Instruction::Load(parse_register(parts[0]), parse_value(parts[1]))
         }
+        ["SUB", args] => {
+            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
+            Instruction::Sub(parse_register(regs[0]), parse_register(regs[1]))
+        }
+        ["NAND", args] => {
+            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
+            Instruction::Nand(parse_register(regs[0]), parse_register(regs[1]))
+        }
+        ["OR", args] => {
+            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
+            Instruction::Or(parse_register(regs[0]), parse_register(regs[1]))
+        }
+        ["CMP", args] => {
+            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
+            Instruction::Cmp(parse_register(regs[0]), parse_register(regs[1]))
+        }
+        ["JZ", addr] => Instruction::Jz(parse_value(addr)),
         _ => panic!("Unknown instruction: {}", text),
     }
 }

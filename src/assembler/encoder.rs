@@ -19,6 +19,7 @@ fn instruction_size(instr: &Instruction) -> usize {
     match instr {
         Instruction::Load(_, _) => 2,
         Instruction::Jmp(_) => 2,
+        Instruction::Jz(_) => 2,
         _ => 1,
     }
 }
@@ -37,6 +38,16 @@ pub fn assemble_instruction(instr: &Instruction, symbols: &HashMap<String, usize
         Instruction::Mov(Register::B, Register::A) => vec![0x0d],
         Instruction::Add(Register::A, Register::B) => vec![0x0e],
         Instruction::Halt => vec![0x0f],
+        Instruction::Inc(Register::B) => vec![0x10],
+        Instruction::Mov(Register::A, Register::B) => vec![0x11],
+        Instruction::Sub(Register::A, Register::B) => vec![0x12],
+        Instruction::Nand(Register::A, Register::B) => vec![0x13],
+        Instruction::Or(Register::A, Register::B) => vec![0x14],
+        Instruction::Cmp(Register::A, Register::B) => vec![0x15],
+        Instruction::Jz(Value::Label(label)) => {
+            let addr = symbols.get(label).expect("Undefined label");
+            vec![0x16, *addr as u8]
+        }
         _ => panic!("Unsupported instruction format: {:?}", instr),
     }
 }

@@ -21,6 +21,11 @@ pub enum Instruction {
     Add(Register, Register),
     Jmp(Value),
     Load(Register, Value),
+    Sub(Register, Register),
+    Nand(Register, Register),
+    Or(Register, Register),
+    Cmp(Register, Register),
+    Jz(Value),
 }
 
 #[derive(Debug)]
