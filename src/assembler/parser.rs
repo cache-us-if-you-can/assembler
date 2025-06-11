@@ -1,67 +1,69 @@
 use crate::types::*;
 
 pub fn parse_line(line: &str) -> Line {
-    let line = {
-        let line = line.split(';').next().unwrap();
-        line.trim().to_uppercase()
-    };
+    let line = line
+        .split(';')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .to_ascii_uppercase();
 
+    // Split into label and instruction parts by first colon, if any
     let mut parts = line.split(':');
     let (label, rest) = match (parts.next(), parts.next()) {
-        (Some(label), Some(instr)) => (Some(label.trim().to_string()), instr.trim()),
-        (Some(instr), None) => (None, instr.trim()),
+        (Some(l), Some(r)) => (Some(l.trim().to_string()), r.trim()),
+        (Some(r), None) => (None, r.trim()),
         _ => panic!("Invalid line: {}", line),
     };
 
-    let instruction = Some(parse_instruction(rest));
+    let instruction = match rest.is_empty() {
+        true => None, // empty instruction for label-only lines
+        false => Some(parse_instruction(rest)),
+    };
+
     Line { label, instruction }
 }
 
-fn parse_instruction(text: &str) -> Instruction {
-    let tokens: Vec<&str> = text.split_whitespace().collect();
+fn _parse_two<R1, R2>(args: &str, p1: fn(&str) -> R1, p2: fn(&str) -> R2) -> (R1, R2) {
+    let mut parts = args.split(',').map(str::trim);
+    (p1(parts.next().unwrap()), p2(parts.next().unwrap()))
+}
 
-    match tokens.as_slice() {
-        ["NOP"] => Instruction::Nop,
-        ["INPUT"] => Instruction::Input,
-        ["OUTPUT"] => Instruction::Output,
-        ["HALT"] => Instruction::Halt,
-        ["INC", reg] => Instruction::Inc(parse_register(reg)),
-        ["MOV", args] => {
-            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
-            Instruction::Mov(parse_register(regs[0]), parse_register(regs[1]))
-        }
-        ["ADD", args] => {
-            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
-            Instruction::Add(parse_register(regs[0]), parse_register(regs[1]))
-        }
-        ["JMP", addr] => Instruction::Jmp(parse_value(addr)),
-        ["LOAD", args @ ..] => {
-            let joined = args.join(" ");
-            let parts: Vec<&str> = joined.split(',').map(str::trim).collect();
-            Instruction::Load(parse_register(parts[0]), parse_value(parts[1]))
-        }
-        ["SUB", args] => {
-            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
-            Instruction::Sub(parse_register(regs[0]), parse_register(regs[1]))
-        }
-        ["NAND", args] => {
-            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
-            Instruction::Nand(parse_register(regs[0]), parse_register(regs[1]))
-        }
-        ["OR", args] => {
-            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
-            Instruction::Or(parse_register(regs[0]), parse_register(regs[1]))
-        }
-        ["CMP", args] => {
-            let regs: Vec<&str> = args.split(',').map(str::trim).collect();
-            Instruction::Cmp(parse_register(regs[0]), parse_register(regs[1]))
-        }
-        ["JZ", addr] => Instruction::Jz(parse_value(addr)),
-        ["STORE", args @ ..] => {
-            let joined = args.join(" ");
-            let parts: Vec<&str> = joined.split(',').map(str::trim).collect();
-            Instruction::Store(parse_register(parts[0]), parse_value(parts[1]))
-        }
+fn parse_instruction(text: &str) -> Instruction {
+    let mut tokens = text.split_whitespace();
+    let opcode = tokens.next().expect("Empty instruction");
+    let args = tokens.collect::<Vec<_>>().join(" ");
+
+    let parse_rr = |ctor: fn(Register, Register) -> Instruction| {
+        let (r1, r2) = _parse_two(&args, parse_register, parse_register);
+        ctor(r1, r2)
+    };
+
+    let parse_rv = |ctor: fn(Register, Value) -> Instruction| {
+        let (r, v) = _parse_two(&args, parse_register, parse_value);
+        ctor(r, v)
+    };
+
+    match opcode {
+        "NOP" => Instruction::Nop,
+        "INPUT" => Instruction::Input,
+        "OUTPUT" => Instruction::Output,
+        "HALT" => Instruction::Halt,
+        "INC" => Instruction::Inc(parse_register(args.trim())),
+
+        "MOV" => parse_rr(Instruction::Mov),
+        "ADD" => parse_rr(Instruction::Add),
+        "SUB" => parse_rr(Instruction::Sub),
+        "NAND" => parse_rr(Instruction::Nand),
+        "OR" => parse_rr(Instruction::Or),
+        "CMP" => parse_rr(Instruction::Cmp),
+
+        "LOAD" => parse_rv(Instruction::Load),
+        "STORE" => parse_rv(Instruction::Store),
+
+        "JMP" => Instruction::Jmp(parse_value(args.trim())),
+        "JZ" => Instruction::Jz(parse_value(args.trim())),
+
         _ => panic!("Unknown instruction: {}", text),
     }
 }
@@ -75,8 +77,9 @@ fn parse_register(s: &str) -> Register {
 }
 
 fn parse_value(s: &str) -> Value {
-    s.strip_prefix("#")
-        .map(|imm| Value::Immediate(imm.parse().unwrap()))
-        .or_else(|| s.parse::<u8>().ok().map(Value::Address))
-        .unwrap_or_else(|| Value::Label(s.to_string()))
+    match s.strip_prefix('#') {
+        Some(imm) => imm.parse().map(Value::Immediate),
+        None => s.parse().map(Value::Address),
+    }
+    .unwrap_or_else(|_| Value::Label(s.to_string()))
 }
