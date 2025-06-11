@@ -57,7 +57,11 @@ fn parse_instruction(text: &str) -> Instruction {
             Instruction::Cmp(parse_register(regs[0]), parse_register(regs[1]))
         }
         ["JZ", addr] => Instruction::Jz(parse_value(addr)),
-        ["STORE", addr] => Instruction::Store(parse_value(addr)),
+        ["STORE", args @ ..] => {
+            let joined = args.join(" ");
+            let parts: Vec<&str> = joined.split(',').map(str::trim).collect();
+            Instruction::Store(parse_register(parts[0]), parse_value(parts[1]))
+        }
         _ => panic!("Unknown instruction: {}", text),
     }
 }
