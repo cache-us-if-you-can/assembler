@@ -20,6 +20,7 @@ fn instruction_size(instr: &Instruction) -> usize {
         Instruction::Load(_, _) => 2,
         Instruction::Jmp(_) => 2,
         Instruction::Jz(_) => 2,
+        Instruction::Store(_) => 2,
         _ => 1,
     }
 }
@@ -48,6 +49,7 @@ pub fn assemble_instruction(instr: &Instruction, symbols: &HashMap<String, usize
             let addr = symbols.get(label).expect("Undefined label");
             vec![0x16, *addr as u8]
         }
+        Instruction::Store(Value::Immediate(v)) => vec![0x19, *v],
         _ => panic!("Unsupported instruction format: {:?}", instr),
     }
 }

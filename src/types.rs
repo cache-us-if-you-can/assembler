@@ -26,6 +26,7 @@ pub enum Instruction {
     Or(Register, Register),
     Cmp(Register, Register),
     Jz(Value),
+    Store(Value),
 }
 
 #[derive(Debug)]
