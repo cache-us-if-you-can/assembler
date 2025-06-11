@@ -49,7 +49,8 @@ pub fn assemble_instruction(instr: &Instruction, symbols: &HashMap<String, usize
             let addr = symbols.get(label).expect("Undefined label");
             vec![0x16, *addr as u8]
         }
-        Instruction::Store(Register::A, Value::Immediate(v)) => vec![0x19, *v],
+        Instruction::Store(Register::A, Value::Address(v)) => vec![0x1a, *v],
+        Instruction::Load(Register::A, Value::Address(v)) => vec![0x1d, *v],
         _ => panic!("Unsupported instruction format: {:?}", instr),
     }
 }

@@ -7,6 +7,7 @@ pub enum Register {
 #[derive(Debug)]
 pub enum Value {
     Immediate(u8), // like #42
+    Address(u8),   // like 08
     Label(String), // like start:
 }
 

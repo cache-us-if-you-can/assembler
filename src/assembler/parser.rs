@@ -75,9 +75,8 @@ fn parse_register(s: &str) -> Register {
 }
 
 fn parse_value(s: &str) -> Value {
-    if let Some(imm) = s.strip_prefix("#") {
-        Value::Immediate(imm.parse().unwrap())
-    } else {
-        Value::Label(s.to_string())
-    }
+    s.strip_prefix("#")
+        .map(|imm| Value::Immediate(imm.parse().unwrap()))
+        .or_else(|| s.parse::<u8>().ok().map(Value::Address))
+        .unwrap_or_else(|| Value::Label(s.to_string()))
 }
