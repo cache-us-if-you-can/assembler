@@ -24,7 +24,7 @@ pub fn parse_line(line: &str) -> Line {
     Line { label, instruction }
 }
 
-fn _parse_two<R1, R2>(args: &str, p1: fn(&str) -> R1, p2: fn(&str) -> R2) -> (R1, R2) {
+fn parse_two<R1, R2>(args: &str, p1: fn(&str) -> R1, p2: fn(&str) -> R2) -> (R1, R2) {
     let mut parts = args.split(',').map(str::trim);
     (p1(parts.next().unwrap()), p2(parts.next().unwrap()))
 }
@@ -35,12 +35,12 @@ fn parse_instruction(text: &str) -> Instruction {
     let args = tokens.collect::<Vec<_>>().join(" ");
 
     let parse_rr = |ctor: fn(Register, Register) -> Instruction| {
-        let (r1, r2) = _parse_two(&args, parse_register, parse_register);
+        let (r1, r2) = parse_two(&args, parse_register, parse_register);
         ctor(r1, r2)
     };
 
     let parse_rv = |ctor: fn(Register, Value) -> Instruction| {
-        let (r, v) = _parse_two(&args, parse_register, parse_value);
+        let (r, v) = parse_two(&args, parse_register, parse_value);
         ctor(r, v)
     };
 
