@@ -1,4 +1,5 @@
 use crate::types::*;
+use std::collections::HashMap;
 
 pub fn parse_line(line: &str) -> Line {
     let line = line
@@ -65,6 +66,7 @@ fn parse_instruction(text: &str) -> Instruction {
         "JZ" => Instruction::Jz(parse_value(args.trim())),
 
         "DB" => Instruction::Db(parse_value(args.trim())),
+        "EQU" => Instruction::Equ(parse_value(args.trim())),
 
         _ => panic!("Unknown instruction: {}", text),
     }
@@ -84,4 +86,56 @@ fn parse_value(s: &str) -> Value {
         None => s.parse().map(Value::Address),
     }
     .unwrap_or_else(|_| Value::Label(s.to_string()))
+}
+
+pub fn replace_constants(lines: &[Line]) -> Vec<Line> {
+    let consts: HashMap<String, Value> = lines
+        .iter()
+        .filter_map(|line| {
+            if let (Some(name), Some(Instruction::Equ(val))) = (&line.label, &line.instruction) {
+                Some((name.clone(), val.clone()))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    fn resolve(val: &Value, consts: &HashMap<String, Value>) -> Value {
+        match val {
+            Value::Label(name) => {
+                if let Some(inner) = consts.get(name) {
+                    resolve(inner, consts)
+                } else {
+                    Value::Label(name.clone())
+                }
+            }
+            other => other.clone(),
+        }
+    }
+
+    let resolved_consts: HashMap<String, Value> = consts
+        .iter()
+        .map(|(k, v)| (k.clone(), resolve(v, &consts)))
+        .collect();
+
+    fn replace_val(val: &Value, consts: &HashMap<String, Value>) -> Value {
+        match val {
+            Value::Label(name) => consts
+                .get(name)
+                .cloned()
+                .unwrap_or(Value::Label(name.clone())),
+            v => v.clone(),
+        }
+    }
+
+    lines
+        .iter()
+        .map(|line| Line {
+            label: line.label.clone(),
+            instruction: line
+                .instruction
+                .as_ref()
+                .map(|instr| instr.map_values(|v| replace_val(v, &resolved_consts))),
+        })
+        .collect()
 }

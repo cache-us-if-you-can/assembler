@@ -25,9 +25,10 @@ fn main() {
         .map(parser::parse_line)
         .collect();
 
-    let symbols = encoder::build_symbol_table(&parsed_lines);
+    let corrected_lines = parser::replace_constants(&parsed_lines);
+    let symbols = encoder::build_symbol_table(&corrected_lines);
 
-    let program: Vec<u8> = parsed_lines
+    let program: Vec<u8> = corrected_lines
         .iter()
         .filter_map(|line| line.instruction.as_ref())
         .flat_map(|instr| encoder::assemble_instruction(instr, &symbols))

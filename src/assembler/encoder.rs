@@ -56,6 +56,7 @@ pub fn assemble_instruction(instr: &Instruction, symbols: &HashMap<String, usize
             vec![0x1d, *addr as u8]
         }
         Instruction::Db(Value::Immediate(v)) => vec![*v],
+        Instruction::Equ(Value::Immediate(_)) => vec![],
         _ => panic!("Unsupported instruction format: {:?}", instr),
     }
 }
