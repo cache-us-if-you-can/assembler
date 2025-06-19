@@ -67,6 +67,7 @@ fn parse_instruction(text: &str) -> Instruction {
 
         "DB" => Instruction::Db(parse_value(args.trim())),
         "EQU" => Instruction::Equ(parse_value(args.trim())),
+        "RESB" => Instruction::Resb(parse_u8(args.trim())),
 
         _ => panic!("Unknown instruction: {}", text),
     }
@@ -78,6 +79,10 @@ fn parse_register(s: &str) -> Register {
         "B" => Register::B,
         _ => panic!("Unknown register: {}", s),
     }
+}
+
+fn parse_u8(s: &str) -> u8 {
+    s.trim().parse::<u8>().expect("Expected a u8 integer")
 }
 
 fn parse_value(s: &str) -> Value {

@@ -30,6 +30,7 @@ pub enum Instruction {
     Store(Register, Value),
     Db(Value),
     Equ(Value),
+    Resb(u8),
 }
 
 impl Instruction {
