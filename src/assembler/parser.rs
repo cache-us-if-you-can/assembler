@@ -64,6 +64,8 @@ fn parse_instruction(text: &str) -> Instruction {
         "JMP" => Instruction::Jmp(parse_value(args.trim())),
         "JZ" => Instruction::Jz(parse_value(args.trim())),
 
+        "DB" => Instruction::Db(parse_value(args.trim())),
+
         _ => panic!("Unknown instruction: {}", text),
     }
 }

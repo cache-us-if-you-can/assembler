@@ -28,6 +28,7 @@ pub enum Instruction {
     Cmp(Register, Register),
     Jz(Value),
     Store(Register, Value),
+    Db(Value),
 }
 
 #[derive(Debug)]
