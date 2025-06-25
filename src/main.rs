@@ -15,33 +15,26 @@ struct Args {
 }
 
 fn main() {
+    if let Err(e) = run() {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let source = std::fs::read_to_string(args.input).expect("Could not read file");
+    let source = std::fs::read_to_string(&args.input)?;
 
-    let parsed_lines: Result<Vec<Line>, parser::ParseError> = source
+    let parsed_lines: Vec<Line> = source
         .lines()
         .filter(|line| !line.trim().is_empty())
         .enumerate()
         .map(parser::parse_line)
-        .collect();
+        .collect::<Result<_, _>>()?;
 
-    let parsed_lines = match parsed_lines {
-        Ok(lines) => lines,
-        Err(e) => {
-            eprintln!("Error parsing file: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let corrected_lines = parser::replace_constants(&parsed_lines)?;
 
-    let corrected_lines = parser::replace_constants(&parsed_lines);
-    let corrected_lines = match corrected_lines {
-        Ok(lines) => lines,
-        Err(e) => {
-            eprintln!("Error replacing constants: {}", e);
-            std::process::exit(1);
-        }
-    };
     let symbols = encoder::build_symbol_table(&corrected_lines);
 
     let program: Vec<u8> = corrected_lines
@@ -51,4 +44,6 @@ fn main() {
         .collect();
 
     writer::write_hex_output(&program, &args.output);
+
+    Ok(())
 }
