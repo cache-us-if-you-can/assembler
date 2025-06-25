@@ -1,0 +1,2 @@
+; INC C
+MOV A, C

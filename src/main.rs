@@ -19,11 +19,20 @@ fn main() {
 
     let source = std::fs::read_to_string(args.input).expect("Could not read file");
 
-    let parsed_lines: Vec<Line> = source
+    let parsed_lines: Result<Vec<Line>, parser::ParseError> = source
         .lines()
         .filter(|line| !line.trim().is_empty())
+        .enumerate()
         .map(parser::parse_line)
         .collect();
+
+    let parsed_lines = match parsed_lines {
+        Ok(lines) => lines,
+        Err(e) => {
+            eprintln!("Error parsing file: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let corrected_lines = parser::replace_constants(&parsed_lines);
     let symbols = encoder::build_symbol_table(&corrected_lines);
