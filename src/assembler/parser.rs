@@ -1,5 +1,6 @@
 use crate::types::*;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -12,6 +13,8 @@ pub enum ParseError {
     InvalidRegister(usize, String),
     #[error("Invalid u8: {1} in line {0}")]
     InvalidU8(usize, String),
+    #[error("Cyclic reference: {0}")]
+    CyclicReference(Value),
 }
 
 pub fn parse_line((index, line): (usize, &str)) -> Result<Line, ParseError> {
@@ -108,35 +111,42 @@ fn parse_value(s: &str) -> Value {
     .unwrap_or_else(|_| Value::Label(s.to_string()))
 }
 
-pub fn replace_constants(lines: &[Line]) -> Vec<Line> {
+pub fn replace_constants(lines: &[Line]) -> Result<Vec<Line>, ParseError> {
     let consts: HashMap<String, Value> = lines
         .iter()
-        .filter_map(|line| {
-            if let (Some(name), Some(Instruction::Equ(val))) = (&line.label, &line.instruction) {
-                Some((name.clone(), val.clone()))
-            } else {
-                None
-            }
+        .filter_map(|line| match (&line.label, &line.instruction) {
+            (Some(name), Some(Instruction::Equ(val))) => Some((name.clone(), val.clone())),
+            _ => None,
         })
         .collect();
 
-    fn resolve(val: &Value, consts: &HashMap<String, Value>) -> Value {
+    fn resolve(
+        val: &Value,
+        consts: &HashMap<String, Value>,
+        visited: &mut HashSet<String>,
+    ) -> Result<Value, ParseError> {
         match val {
             Value::Label(name) => {
-                if let Some(inner) = consts.get(name) {
-                    resolve(inner, consts)
-                } else {
-                    Value::Label(name.clone())
+                if !visited.insert(name.clone()) {
+                    return Err(ParseError::CyclicReference(val.clone()));
+                }
+                match consts.get(name) {
+                    Some(inner) => resolve(inner, consts, visited),
+                    None => Ok(Value::Label(name.clone())),
                 }
             }
-            other => other.clone(),
+            other => Ok(other.clone()),
         }
     }
 
     let resolved_consts: HashMap<String, Value> = consts
         .iter()
-        .map(|(k, v)| (k.clone(), resolve(v, &consts)))
-        .collect();
+        .map(|(k, v)| {
+            let mut visited = HashSet::new();
+            resolve(v, &consts, &mut visited).map(|resolved| (k.clone(), resolved))
+        })
+        // .map(|(k, v)| resolve(v, &consts, 0).map(|resolved| (k.clone(), resolved)))
+        .collect::<Result<_, _>>()?;
 
     fn replace_val(val: &Value, consts: &HashMap<String, Value>) -> Value {
         match val {
@@ -148,7 +158,7 @@ pub fn replace_constants(lines: &[Line]) -> Vec<Line> {
         }
     }
 
-    lines
+    let replaced_lines = lines
         .iter()
         .map(|line| Line {
             label: line.label.clone(),
@@ -157,5 +167,7 @@ pub fn replace_constants(lines: &[Line]) -> Vec<Line> {
                 .as_ref()
                 .map(|instr| instr.map_values(|v| replace_val(v, &resolved_consts))),
         })
-        .collect()
+        .collect();
+
+    Ok(replaced_lines)
 }

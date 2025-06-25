@@ -35,6 +35,13 @@ fn main() {
     };
 
     let corrected_lines = parser::replace_constants(&parsed_lines);
+    let corrected_lines = match corrected_lines {
+        Ok(lines) => lines,
+        Err(e) => {
+            eprintln!("Error replacing constants: {}", e);
+            std::process::exit(1);
+        }
+    };
     let symbols = encoder::build_symbol_table(&corrected_lines);
 
     let program: Vec<u8> = corrected_lines

@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Clone)]
 pub enum Register {
     A,
@@ -9,6 +11,16 @@ pub enum Value {
     Immediate(u8), // like #42
     Address(u8),   // like 08
     Label(String), // like start:
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Immediate(imm) => write!(f, "#{}", imm),
+            Value::Address(addr) => write!(f, "{}", addr),
+            Value::Label(label) => write!(f, "{}", label),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
