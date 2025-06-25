@@ -145,7 +145,6 @@ pub fn replace_constants(lines: &[Line]) -> Result<Vec<Line>, ParseError> {
             let mut visited = HashSet::new();
             resolve(v, &consts, &mut visited).map(|resolved| (k.clone(), resolved))
         })
-        // .map(|(k, v)| resolve(v, &consts, 0).map(|resolved| (k.clone(), resolved)))
         .collect::<Result<_, _>>()?;
 
     fn replace_val(val: &Value, consts: &HashMap<String, Value>) -> Value {
