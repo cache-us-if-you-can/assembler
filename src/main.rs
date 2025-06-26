@@ -43,7 +43,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Result<Vec<Vec<u8>>, _>>()
         .map(|chunks| chunks.concat())?;
 
-    writer::write_hex_output(&program, &args.output);
+    writer::write_hex_output(&program, &args.output)?;
 
     Ok(())
 }
