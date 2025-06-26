@@ -42,7 +42,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .into_iter()
         .map(|line| {
             let bytes = match &line.instruction {
-                Some(instr) => encoder::assemble_instruction(line.index, instr, &symbols)?,
+                Some(instr) => instr.encode(line.index, &symbols)?,
                 None => vec![],
             };
             Ok((line, bytes))
