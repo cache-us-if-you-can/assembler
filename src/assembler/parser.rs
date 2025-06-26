@@ -131,11 +131,21 @@ impl Register {
 
 impl Value {
     fn parse(s: &str) -> Value {
-        match s.strip_prefix('#') {
-            Some(imm) => imm.parse().map(Value::Immediate),
-            None => s.parse().map(Value::Address),
+        let (radix, val) = match s {
+            s if s.starts_with('#') => (10, &s[1..]),
+            s if s.to_uppercase().starts_with("0X") => (16, &s[2..]),
+            _ => (0, s),
+        };
+
+        if radix != 0 {
+            if let Ok(num) = u8::from_str_radix(val, radix) {
+                return Value::Immediate(num);
+            }
         }
-        .unwrap_or_else(|_| Value::Label(s.to_string()))
+
+        s.parse::<u8>()
+            .map(Value::Address)
+            .unwrap_or_else(|_| Value::Label(s.to_string()))
     }
 }
 
