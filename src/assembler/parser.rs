@@ -17,7 +17,7 @@ pub enum ParseError {
     CyclicReference(Value),
 }
 
-pub fn parse_line((index, line): (usize, &str)) -> Result<Line, ParseError> {
+pub fn parse_line((line, index): (&str, usize)) -> Result<Line, ParseError> {
     let line = line
         .split(';')
         .next()

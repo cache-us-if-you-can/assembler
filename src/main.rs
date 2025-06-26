@@ -29,7 +29,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let parsed_lines: Vec<Line> = source
         .lines()
         .filter(|line| !line.trim().is_empty())
-        .enumerate()
+        .zip(1..)
         .map(parser::parse_line)
         .collect::<Result<_, _>>()?;
 
