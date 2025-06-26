@@ -39,7 +39,11 @@ pub fn parse_line((index, line): (usize, &str)) -> Result<Line, ParseError> {
         Some(parse_instruction(index, rest)?)
     };
 
-    Ok(Line { label, instruction })
+    Ok(Line {
+        index,
+        label,
+        instruction,
+    })
 }
 
 fn parse_two<R1, R2, F1, F2>(args: &str, p1: F1, p2: F2) -> (R1, R2)
@@ -165,6 +169,7 @@ pub fn replace_constants(lines: &[Line]) -> Result<Vec<Line>, ParseError> {
                 .instruction
                 .as_ref()
                 .map(|instr| instr.map_values(|v| replace_val(v, &resolved_consts))),
+            ..*line
         })
         .collect();
 

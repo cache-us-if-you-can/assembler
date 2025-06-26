@@ -34,14 +34,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Result<_, _>>()?;
 
     let corrected_lines = parser::replace_constants(&parsed_lines)?;
-
     let symbols = encoder::build_symbol_table(&corrected_lines);
 
     let program: Vec<u8> = corrected_lines
         .iter()
-        .filter_map(|line| line.instruction.as_ref())
-        .flat_map(|instr| encoder::assemble_instruction(instr, &symbols))
-        .collect();
+        .filter_map(|line| line.instruction.as_ref().map(|instr| (line.index, instr)))
+        .map(|(index, instr)| encoder::assemble_instruction(index, instr, &symbols))
+        .collect::<Result<Vec<Vec<u8>>, _>>()
+        .map(|chunks| chunks.concat())?;
 
     writer::write_hex_output(&program, &args.output);
 
