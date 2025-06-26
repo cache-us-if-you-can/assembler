@@ -30,7 +30,6 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     let parsed_lines: Vec<Line> = source
         .lines()
-        .filter(|line| !line.trim().is_empty())
         .zip(1..)
         .map(Line::parse)
         .collect::<Result<_, _>>()?;
