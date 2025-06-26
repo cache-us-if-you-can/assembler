@@ -51,7 +51,11 @@ impl Instruction {
             Nop => vec![0x00],
             Input => vec![0x04],
             Output => vec![0x05],
-            Jmp(Value::Label(label)) => vec![0x06, resolve(label)? as u8],
+            Jmp(val) => match val {
+                Value::Label(label) => vec![0x06, resolve(label)? as u8],
+                Value::Address(v) => vec![0x06, *v],
+                _ => return Err(EncodeError::UnsupportedInstruction(index, self.clone())),
+            },
             Load(Register::A, val) => match val {
                 Value::Immediate(v) => vec![0x09, *v],
                 Value::Address(v) => vec![0x1d, *v],
