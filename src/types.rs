@@ -104,3 +104,19 @@ pub struct Line {
     pub label: Option<String>,
     pub instruction: Option<Instruction>,
 }
+
+impl fmt::Display for Line {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let label = self
+            .label
+            .as_ref()
+            .map_or(String::new(), |l| format!("{}:", l));
+        let instr = self
+            .instruction
+            .as_ref()
+            .map_or("NOP".to_string(), |i| i.to_string());
+
+        // Use field width to align columns better
+        write!(f, "{:02X} {:<8} {}", self.index, label, instr)
+    }
+}

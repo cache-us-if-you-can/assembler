@@ -12,6 +12,8 @@ struct Args {
     input: String,
     /// Output hex file
     output: Option<String>,
+    #[arg(short, long)]
+    side_by_side: bool,
 }
 
 fn main() {
@@ -36,14 +38,27 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let corrected_lines = parser::replace_constants(&parsed_lines)?;
     let symbols = encoder::build_symbol_table(&corrected_lines);
 
-    let program: Vec<u8> = corrected_lines
-        .iter()
-        .filter_map(|line| line.instruction.as_ref().map(|instr| (line.index, instr)))
-        .map(|(index, instr)| encoder::assemble_instruction(index, instr, &symbols))
-        .collect::<Result<Vec<Vec<u8>>, _>>()
-        .map(|chunks| chunks.concat())?;
+    let compiled_lines: Vec<(Line, Vec<u8>)> = corrected_lines
+        .into_iter()
+        .map(|line| {
+            let bytes = match &line.instruction {
+                Some(instr) => encoder::assemble_instruction(line.index, instr, &symbols)?,
+                None => vec![],
+            };
+            Ok((line, bytes))
+        })
+        .collect::<Result<Vec<(Line, Vec<u8>)>, Box<dyn std::error::Error>>>()?;
 
-    writer::write_hex_output(&program, &args.output)?;
+    if args.side_by_side {
+        writer::write_side_by_side_output(compiled_lines, &args.output)?;
+    } else {
+        let program: Vec<u8> = compiled_lines
+            .iter()
+            .flat_map(|(_, bytes)| bytes)
+            .copied()
+            .collect();
+        writer::write_hex_output(&program, &args.output)?;
+    }
 
     Ok(())
 }
