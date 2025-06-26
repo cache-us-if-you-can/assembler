@@ -69,14 +69,6 @@ impl Line {
     }
 }
 
-fn parse_two<R1, R2, F1, F2>(args: &str, p1: F1, p2: F2) -> (R1, R2)
-where
-    F1: Fn(&str) -> R1,
-    F2: Fn(&str) -> R2,
-{
-    let mut parts = args.split(',').map(str::trim);
-    (p1(parts.next().unwrap()), p2(parts.next().unwrap()))
-}
 impl Instruction {
     fn parse(i: usize, text: &str) -> Result<Instruction, ParseError> {
         let mut tokens = text.split_whitespace();
@@ -84,14 +76,22 @@ impl Instruction {
         let args = tokens.collect::<Vec<_>>().join(" ");
 
         let parse_rr = |ctor: fn(Register, Register) -> Instruction| {
-            let (r1, r2) = parse_two(&args, |s| Register::parse(i, s), |s| Register::parse(i, s));
-            Ok(ctor(r1?, r2?))
+            let (a, b) = args
+                .split_once(',')
+                .ok_or(ParseError::InvalidInstruction(i, text.to_string()))?;
+            let r1 = Register::parse(i, a.trim())?;
+            let r2 = Register::parse(i, b.trim())?;
+            Ok(ctor(r1, r2))
         };
 
         let parse_rv =
             |ctor: fn(Register, Value) -> Instruction| -> Result<Instruction, ParseError> {
-                let (r, v) = parse_two(&args, |s| Register::parse(i, s), Value::parse);
-                Ok(ctor(r?, v))
+                let (a, b) = args
+                    .split_once(',')
+                    .ok_or(ParseError::InvalidInstruction(i, text.to_string()))?;
+                let r = Register::parse(i, a.trim())?;
+                let v = Value::parse(b.trim());
+                Ok(ctor(r, v))
             };
 
         use Instruction::*;
