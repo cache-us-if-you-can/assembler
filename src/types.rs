@@ -8,10 +8,7 @@ pub enum Register {
 
 impl fmt::Display for Register {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Register::A => write!(f, "A"),
-            Register::B => write!(f, "B"),
-        }
+        write!(f, "{:?}", self)
     }
 }
 
@@ -24,10 +21,11 @@ pub enum Value {
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Value::*;
         match self {
-            Value::Immediate(imm) => write!(f, "#{}", imm),
-            Value::Address(addr) => write!(f, "{}", addr),
-            Value::Label(label) => write!(f, "{}", label),
+            Immediate(imm) => write!(f, "#{}", imm),
+            Address(addr) => write!(f, "{}", addr),
+            Label(label) => write!(f, "{}", label),
         }
     }
 }
@@ -56,25 +54,26 @@ pub enum Instruction {
 
 impl fmt::Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Instruction::*;
         match self {
-            Instruction::Nop => write!(f, "NOP"),
-            Instruction::Input => write!(f, "INPUT"),
-            Instruction::Output => write!(f, "OUTPUT"),
-            Instruction::Halt => write!(f, "HALT"),
-            Instruction::Inc(r) => write!(f, "INC {}", r),
-            Instruction::Mov(r1, r2) => write!(f, "MOV {} {}", r1, r2),
-            Instruction::Add(r1, r2) => write!(f, "ADD {} {}", r1, r2),
-            Instruction::Jmp(v) => write!(f, "JMP {}", v),
-            Instruction::Load(r, v) => write!(f, "LOAD {} {}", r, v),
-            Instruction::Sub(r1, r2) => write!(f, "SUB {} {}", r1, r2),
-            Instruction::Nand(r1, r2) => write!(f, "NAND {} {}", r1, r2),
-            Instruction::Or(r1, r2) => write!(f, "OR {} {}", r1, r2),
-            Instruction::Cmp(r1, r2) => write!(f, "CMP {} {}", r1, r2),
-            Instruction::Jz(v) => write!(f, "JZ {}", v),
-            Instruction::Store(r, v) => write!(f, "STORE {} {}", r, v),
-            Instruction::Db(v) => write!(f, "DB {}", v),
-            Instruction::Equ(v) => write!(f, "EQU {}", v),
-            Instruction::Resb(n) => write!(f, "RESB {}", n),
+            Nop => write!(f, "NOP"),
+            Input => write!(f, "INPUT"),
+            Output => write!(f, "OUTPUT"),
+            Halt => write!(f, "HALT"),
+            Inc(r) => write!(f, "INC {}", r),
+            Mov(r1, r2) => write!(f, "MOV {} {}", r1, r2),
+            Add(r1, r2) => write!(f, "ADD {} {}", r1, r2),
+            Jmp(v) => write!(f, "JMP {}", v),
+            Load(r, v) => write!(f, "LOAD {} {}", r, v),
+            Sub(r1, r2) => write!(f, "SUB {} {}", r1, r2),
+            Nand(r1, r2) => write!(f, "NAND {} {}", r1, r2),
+            Or(r1, r2) => write!(f, "OR {} {}", r1, r2),
+            Cmp(r1, r2) => write!(f, "CMP {} {}", r1, r2),
+            Jz(v) => write!(f, "JZ {}", v),
+            Store(r, v) => write!(f, "STORE {} {}", r, v),
+            Db(v) => write!(f, "DB {}", v),
+            Equ(v) => write!(f, "EQU {}", v),
+            Resb(n) => write!(f, "RESB {}", n),
         }
     }
 }
@@ -103,20 +102,4 @@ pub struct Line {
     pub index: usize,
     pub label: Option<String>,
     pub instruction: Option<Instruction>,
-}
-
-impl fmt::Display for Line {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let label = self
-            .label
-            .as_ref()
-            .map_or(String::new(), |l| format!("{}:", l));
-        let instr = self
-            .instruction
-            .as_ref()
-            .map_or("NOP".to_string(), |i| i.to_string());
-
-        // Use field width to align columns better
-        write!(f, "{:02X} {:<8} {}", self.index, label, instr)
-    }
 }
