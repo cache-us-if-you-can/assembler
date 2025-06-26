@@ -32,7 +32,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .lines()
         .filter(|line| !line.trim().is_empty())
         .zip(1..)
-        .map(parser::parse_line)
+        .map(Line::parse)
         .collect::<Result<_, _>>()?;
 
     let corrected_lines = parser::replace_constants(&parsed_lines)?;
