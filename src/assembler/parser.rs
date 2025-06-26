@@ -19,28 +19,52 @@ pub enum ParseError {
 
 impl Line {
     pub fn parse((line, index): (&str, usize)) -> Result<Line, ParseError> {
+        // Remove comments and trim whitespace
         let line = line
-            .split(';') // get rid of comments
+            .split(';')
             .next()
             .unwrap_or("")
             .trim()
             .to_ascii_uppercase();
-        // Split into label and instruction parts by first colon, if any
-        let mut parts = line.split(':');
-        let (label, rest) = match (parts.next(), parts.next()) {
-            (Some(l), Some(r)) => (Some(l.trim().to_string()), r.trim()),
-            (Some(r), None) => (None, r.trim()),
-            _ => return Err(ParseError::InvalidLine(index, line.to_string())),
-        };
-        let instruction = if rest.is_empty() {
-            None
-        } else {
-            Some(Instruction::parse(index, rest)?)
-        };
+
+        // If line is empty after trimming, return an empty line without label or instruction
+        if line.is_empty() {
+            return Ok(Line {
+                index,
+                label: None,
+                instruction: None,
+            });
+        }
+
+        // Find first colon to split label and instruction
+        if let Some(colon_pos) = line.find(':') {
+            let (label_part, rest_part) = line.split_at(colon_pos);
+            let label = label_part.trim();
+
+            // If label is empty, treat it as no label
+            if label.is_empty() {
+                return Err(ParseError::InvalidLine(index, line));
+            }
+
+            let rest = rest_part[1..].trim();
+            let instruction = if rest.is_empty() {
+                None
+            } else {
+                Some(Instruction::parse(index, rest)?)
+            };
+
+            return Ok(Line {
+                index,
+                label: Some(label.to_string()),
+                instruction,
+            });
+        }
+        // No colon, so whole line is instruction without label
+        let instruction = Instruction::parse(index, &line)?;
         Ok(Line {
             index,
-            label,
-            instruction,
+            label: None,
+            instruction: Some(instruction),
         })
     }
 }
