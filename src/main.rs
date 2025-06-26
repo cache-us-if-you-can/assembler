@@ -50,7 +50,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Result<Vec<(Line, Vec<u8>)>, Box<dyn std::error::Error>>>()?;
 
     if args.side_by_side {
-        writer::write_side_by_side_output(compiled_lines, &args.output)?;
+        writer::write_side_by_side_output(&compiled_lines, &args.output)?;
     } else {
         let program: Vec<u8> = compiled_lines
             .iter()

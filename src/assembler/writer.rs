@@ -1,4 +1,5 @@
 use crate::types::*;
+use std::io;
 use tabled::{
     Table, Tabled,
     settings::{
@@ -10,8 +11,12 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum WriteError {
-    #[error("Cannot write to file {0}")]
-    CannotWriteToFile(String),
+    #[error("Cannot write to file {filename}: {source}")]
+    CannotWriteToFile {
+        filename: String,
+        #[source]
+        source: io::Error,
+    },
 }
 
 pub fn write_hex_output(program: &[u8], output: &Option<String>) -> Result<(), WriteError> {
@@ -41,8 +46,12 @@ pub fn write_hex_output(program: &[u8], output: &Option<String>) -> Result<(), W
         .collect::<Vec<String>>()
         .join("\n");
     match output {
-        Some(filename) => std::fs::write(filename, hex_lines)
-            .map_err(|_| WriteError::CannotWriteToFile(filename.clone()))?,
+        Some(filename) => {
+            std::fs::write(filename, hex_lines).map_err(|e| WriteError::CannotWriteToFile {
+                filename: filename.clone(),
+                source: e,
+            })?
+        }
         None => println!("{}", hex_lines),
     }
     Ok(())
@@ -61,16 +70,17 @@ struct DisplayLine {
 }
 
 pub fn write_side_by_side_output(
-    compiled_lines: Vec<(Line, Vec<u8>)>,
+    compiled_lines: &[(Line, Vec<u8>)],
     output: &Option<String>,
 ) -> Result<(), WriteError> {
     let display_lines: Vec<DisplayLine> = compiled_lines
-        .into_iter()
+        .iter()
         .map(|(line, bytes)| {
             let line_number = format!("{:02}", line.index);
-            let label = line.label.unwrap_or_default();
+            let label = line.label.clone().unwrap_or_default();
             let instruction = line
                 .instruction
+                .as_ref()
                 .map(|instr| format!("{}", instr))
                 .unwrap_or_default();
             let hex = bytes
@@ -94,14 +104,14 @@ pub fn write_side_by_side_output(
         .with(Modify::new(Columns::one(1)).with(Color::FG_YELLOW))
         .with(Modify::new(Columns::one(2)).with(Color::FG_RED))
         .with(Modify::new(Columns::one(3)).with(Color::FG_MAGENTA))
-        .with(Modify::new(Columns::one(4)).with(Color::FG_RED))
         .with(Modify::new(Rows::first()).with(Color::FG_BLUE))
         .to_string();
 
     match output {
-        Some(path) => {
-            std::fs::write(path, table).map_err(|_| WriteError::CannotWriteToFile(path.clone()))
-        }
+        Some(path) => std::fs::write(path, table).map_err(|e| WriteError::CannotWriteToFile {
+            filename: path.clone(),
+            source: e,
+        }),
         None => {
             println!("{}", table);
             Ok(())
