@@ -28,8 +28,8 @@ The following registers are supported:
 | `JMP <addr>`      | `0x06` | 2     | Jump to address (via number or label)                   |
 | `INC A`           | `0x0C` | 1     | Increment register `A`                                  |
 | `INC B`           | `0x10` | 1     | Increment register `B`                                  |
-| `MOV B, A`        | `0x0D` | 1     | TODO                                                    |
-| `MOV A, B`        | `0x11` | 1     | TODO                                                    |
+| `MOV B, A`        | `0x0D` | 1     | Move value of `A` to `B`                                |
+| `MOV A, B`        | `0x11` | 1     | Move value of `B` to `A`                                |
 | `ADD A, B`        | `0x0E` | 1     | Add register `A` to `B` and store in `A`                |
 | `HALT`            | `0x0F` | 1     | Halt program                                            |
 | `SUB A, B`        | `0x12` | 1     | Subtract `B` from `A` and store in `A`                  |
