@@ -32,6 +32,7 @@ impl Instruction {
             Jmp(_) => 2,
             Jz(_) => 2,
             Store(_, _) => 2,
+            Equ(_) => 0,
             _ => 1,
         }
     }
