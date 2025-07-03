@@ -71,9 +71,9 @@ impl Line {
 
 impl Instruction {
     fn parse(i: usize, text: &str) -> Result<Instruction, ParseError> {
-        let mut tokens = text.split_whitespace();
-        let opcode = tokens.next().expect("Empty instruction");
-        let args = tokens.collect::<Vec<_>>().join(" ");
+        let tokens = text.split_whitespace().collect::<Vec<_>>();
+        let opcode = *tokens.first().expect("Empty instruction");
+        let args = tokens.into_iter().skip(1).collect::<Vec<_>>().join(" ");
 
         let parse_rr = |ctor: fn(Register, Register) -> Instruction| {
             let (a, b) = args
